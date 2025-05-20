@@ -1,1 +1,59 @@
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"> <!--fait en sorte que les caractères spéciaux soient acceptés et affichés-->
+  <title>ZAST Family Feud</title> <!-- rendre le site web visuellement attrayant, le code css aide à rendre les éléments (boutons et entrées) plus évidents.-->
+  <style> 
+      body {
+          background-image: url("https://images.gem.cbc.ca/v1/synps-cbc/show/perso/cbc_family_feud_canada_ott_background_v05.jpg?impolicy=ott&im");
+          background-size:100%;
+          background-repeat: no-repeat ;
+      }
+      .center-content {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 15px; 
+      }
+      
+      .button {
+          padding:17px;
+          text-decoration:none;
+          transition:0.3s ease-in;
+      }
+      .button {
+          text-decoration: none;
+          padding: 10px 15px;
+          margin-left: 50px;
+          margin-right: 100px
+          margin-top: 20px;
+          margin-bottom: 20px;
+          border-radius: 12px;
+          border: 1px solid;
+          font-size: 10pt;
+          color: #000000;
+          background-color: #0047AB;
 
+          }
+          .button:visited {
+              color: #FFD700;
+          }
+          .button:hover {
+              background-color: #FFD700;
+              color: #0047AB;
+          }
+          .fit {
+              max-width: 35%;
+              max-height: 40%;
+              
+          }
+          
+  </style>
+  <body>
+      <div class="">
+          <img class="fit" src="images/logo.png">
+          <br>
+          <a class="button" href="pageRegle.html" align="left">Commence le Jeux</a> <!-- crée un bouton qui mène à la page suivante -->
+      </div>
+  </body>
+</head>
+</html>
