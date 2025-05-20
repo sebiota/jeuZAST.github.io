@@ -1,1 +1,289 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />   
+  <title>Quiz ZAST Family Feud</title>
+  <style> 
+    body {
+      font-family: Arial, sans-serif;
+      background: url("https://images.gem.cbc.ca/v1/synps-cbc/show/perso/cbc_family_feud_canada_ott_background_v05.jpg?impolicy=ott&im") no-repeat center center fixed;
+      background-size: cover;
+      color: white;
+      text-align: center;
+      padding: 30px 15px;
+    }
+    h1 {
+      color: gold;
+      text-shadow: 1px 1px 3px black;
+    }
+    #scoreboard {
+      margin-bottom: 20px;
+      font-weight: bold;
+      font-size: 20px;
+      color: gold;
+      text-shadow: 1px 1px 2px black;
+    }
+    #question {
+      background: rgba(0,0,0,0.5);
+      border-radius: 10px;
+      padding: 15px 20px;
+      font-size: 18px;
+      margin-bottom: 15px;
+      max-width: 650px;
+      margin-left: auto;
+      margin-right: auto;
+      text-shadow: 1px 1px 2px black;
+    }
+    #tourInfo {
+      margin: 10px 0;
+      font-size: 16px;
+      color: gold;
+      font-weight: 600;
+      text-shadow: 1px 1px 2px black;
+    }
+    #timer {
+      margin-bottom: 20px;
+      font-size: 16px;
+      font-weight: 600;
+      color: gold;
+      text-shadow: 1px 1px 2px black;
+    }
+    #choix {
+      display: flex;
+      flex-direction: column;
+      max-width: 550px;
+      margin: 0 auto 25px auto;
+      gap: 12px;
+    }
+    .btnChoix {
+      background: gold;
+      border: none;
+      border-radius: 10px;
+      padding: 12px 18px;
+      font-weight: 600;
+      font-size: 16px;
+      color: #003366;
+      cursor: pointer;
+      box-shadow: 0 4px 7px rgba(255, 215, 0, 0.6);
+      transition: background-color 0.3s, color 0.3s;
+      user-select: none;
+    }
+    .btnChoix:hover {
+      background-color: #0000e6; 
+      color: gold;
+    }
+    .btnChoix:disabled {
+      background-color: #444;
+      color: #bbb;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+    #btnSuivant {
+      background-color: gold;
+      border: none;
+      border-radius: 10px;
+      padding: 14px 28px;
+      font-weight: 700;
+      font-size: 18px;
+      color: #003366;
+      cursor: pointer;
+      box-shadow: 0 5px 10px rgba(255, 215, 0, 0.7);
+      user-select: none;
+    }
+    #btnSuivant:hover:enabled {
+      background-color: ##2a5d9f;
+      color: gold;
+    }
+    #btnSuivant:disabled {
+      background-color: #444;
+      color: #bbb;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+    p.instructions {
+      max-width: 650px;
+      margin: 0 auto 25px auto;
+      font-size: 15px;
+      color: white;
+      text-shadow: 1px 1px 3px black;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Quiz ZAST Family Feud</h1>
+
+<div id="scoreboard">Équipe 1: <span id="score1">0</span> &nbsp;&nbsp;|&nbsp;&nbsp; Équipe 2: <span id="score2">0</span></div>
+
+<p class="instructions">
+  Pour buzzer, équipe 1 appuie sur <b>Q</b>, équipe 2 sur <b>P</b>. La première équipe à buzzer choisit une réponse.
+</p>
+
+<div id="question">Appuyez sur Q ou P pour buzzer et commencer.</div>
+<div id="tourInfo"></div>
+<div id="timer"></div>
+<div id="choix" style="display:none;"></div>
+<button id="btnSuivant" disabled>Question suivante</button>
+
+<script>
+  let scoreEquipe1 = 0;
+  let scoreEquipe2 = 0;
+  let equipeQuiJoue = null;
+  let timerId = null;
+  let tempsRestant = 20;
+  let indexQuestion = null;
+  let questionsDejaUtilisees = new Set();
+
+  const questions = [
+    {question: "Quelle est la capitale de la France ?", choix: ["Lyon", "Paris", "Marseille", "Nice"], reponse: "Paris"},
+    {question: "Quel est l'élément chimique dont le symbole est O ?", choix: ["Or", "Oxygène", "Osmium", "Plomb"], reponse: "Oxygène"},
+    {question: "Quel est le plus grand océan du monde ?", choix: ["Atlantique", "Arctique", "Pacifique", "Indien"], reponse: "Pacifique"},
+    {question: "Quel est l'animal national de l'Australie ?", choix: ["Koala", "Émeu", "Kangourou", "Dingo"], reponse: "Kangourou"},
+    {question: "Quelle est la monnaie de l'Espagne ?", choix: ["Franc", "Euro", "Dollar", "Livre"], reponse: "Euro"},
+    {question: "Quel est le plus grand pays du monde ?", choix: ["Canada", "Chine", "Russie", "États-Unis"], reponse: "Russie"},
+    {question: "Quel est le symbole chimique du fer ?", choix: ["Fe", "Fr", "Fi", "Ir"], reponse: "Fe"},
+    {question: "Quel est le plus long fleuve du monde ?", choix: ["Nil", "Amazone", "Mississippi", "Yangsté"], reponse: "Amazone"},
+    {question: "Combien de continents y a-t-il sur Terre ?", choix: ["Six", "Sept", "Huit", "Cinq"], reponse: "Sept"},
+    {question: "Quel est l'océan qui borde la côte ouest des États-Unis ?", choix: ["Atlantique", "Pacifique", "Indien", "Arctique"], reponse: "Pacifique"},
+    {question: "Quel est le plus haut point du monde ?", choix: ["Mont Blanc", "K2", "Everest", "Denali"], reponse: "Everest"},
+    {question: "En quelle année l'homme a-t-il marché sur la Lune pour la première fois ?", choix: ["1969", "1972", "1959", "1980"], reponse: "1969"},
+    {question: "Quelle est la planète la plus proche du Soleil ?", choix: ["Vénus", "Mars", "Mercure", "Terre"], reponse: "Mercure"},
+    {question: "Quelle langue est parlée au Brésil ?", choix: ["Espagnol", "Portugais", "Français", "Anglais"], reponse: "Portugais"},
+    {question: "Quelle est la fonction principale des globules rouges dans le sang?" , choix: ["Transporter l’oxygène", "Combattre les infections", "Coaguler le sang", "Produire des hormones"], reponse: "Transporter l’oxygène"}
+    {question: "Quel animal peut dormir en volant ?", choix: ["Chauve-souris", "Colibri", "Frégate", "Pélican"], reponse: "Frégate"}
+    {question: "Quel fruit a été le premier à être cultivé dans l’espace ?", choix: ["Fraise", "Tomate", "Salade", "Pois"], reponse: "Salade"}
+    {question: "Quel événement a déclenché la Première Guerre mondiale ?", choix: ["Le naufrage du Titanic", "L'assassinat de l'archiduc François-Ferdinand", "Le bombardement de Pearl Harbor", "L'invention de l'avion"], reponse :"Le naufrage du Titanic"}
+    {question: "Quel gaz les plantes absorbent-elles pour réaliser la photosynthèse ?", choix: ["L'oxygène", "L'hydrogène", "Azote", "Dioxyde de carbone"], reponse: "Dioxyde de carbone"}
+  ];
+
+  const score1Elt = document.getElementById('score1');
+  const score2Elt = document.getElementById('score2');
+  const questionElt = document.getElementById('question');
+  const tourInfoElt = document.getElementById('tourInfo');
+  const timerElt = document.getElementById('timer');
+  const choixDiv = document.getElementById('choix');
+  const btnSuivant = document.getElementById('btnSuivant');
+
+  function majScore() {
+    score1Elt.textContent = scoreEquipe1;
+    score2Elt.textContent = scoreEquipe2;
+  }
+
+  function indexAleatoire() {
+    if (questionsDejaUtilisees.size === questions.length) return null;
+    let idx;
+    do {
+      idx = Math.floor(Math.random() * questions.length);
+    } while(questionsDejaUtilisees.has(idx));
+    return idx;5
+  }
+
+  function reset() {
+    equipeQuiJoue = null;
+    tourInfoElt.textContent = "Appuyez sur Q (Équipe 1) ou P (Équipe 2) pour buzzer";
+    timerElt.textContent = "";
+    choixDiv.style.display = 'none';
+    choixDiv.innerHTML = '';
+    btnSuivant.disabled = true;
+    clearInterval(timerId);
+    tempsRestant = 20;
+    questionElt.textContent = "Appuyez sur Q ou P pour buzzer et commencer.";
+    indexQuestion = null;
+  }
+
+  function demarrerTimer() {
+    timerElt.textContent = `Temps restant : ${tempsRestant}s`;
+    timerId = setInterval(() => {
+      tempsRestant--;
+      timerElt.textContent = `Temps restant : ${tempsRestant}s`;
+      if (tempsRestant <= 0) {
+        clearInterval(timerId);
+        timerElt.textContent = "Temps écoulé !";
+        finTour(false);
+      }
+    }, 1000);
+  }
+
+  function afficherChoix() {
+    choixDiv.style.display = 'flex';
+    let q = questions[indexQuestion];
+    choixDiv.innerHTML = '';
+    q.choix.forEach(c => {
+      let btn = document.createElement('button');
+      btn.textContent = c;
+      btn.className = 'btnChoix';
+      btn.onclick = () => verifierReponse(c);
+      choixDiv.appendChild(btn);
+    });
+  }
+
+  function verifierReponse(choix) {
+    clearInterval(timerId);
+    let bonneReponse = questions[indexQuestion].reponse;
+    if (choix === bonneReponse) {
+      tourInfoElt.textContent = `Correct ! Équipe ${equipeQuiJoue} gagne 1 point.`;
+      if (equipeQuiJoue === 1) scoreEquipe1++;
+      else scoreEquipe2++;
+      majScore();
+    } else {
+      tourInfoElt.textContent = `Faux ! La bonne réponse était "${bonneReponse}".`;
+    }
+
+    choixDiv.querySelectorAll('button').forEach(btn => btn.disabled = true);
+    btnSuivant.disabled = false;
+
+    if(scoreEquipe1 >= 10 || scoreEquipe2 >= 10) {
+      setTimeout(() => {
+        alert(`Jeu terminé ! Équipe ${scoreEquipe1 >= 10 ? 1 : 2} a gagné !`);
+        window.location.href = "index.html";
+      }, 1000);
+    }
+  }
+
+  function finTour(succes) {
+    choixDiv.style.display = 'none';
+    btnSuivant.disabled = false;
+    if (!succes) tourInfoElt.textContent = "Temps écoulé, personne n'a répondu.";
+  }
+
+  function questionSuivante() {
+    indexQuestion = indexAleatoire();
+    if(indexQuestion === null) {
+      alert("Toutes les questions ont été posées. Merci d'avoir joué !");
+      window.location.href = "index.html";
+      return;
+    }
+    questionsDejaUtilisees.add(indexQuestion);
+    reset();
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (equipeQuiJoue !== null) return;
+    if (e.key.toLowerCase() === 'q') equipeQuiJoue = 1;
+    else if (e.key.toLowerCase() === 'p') equipeQuiJoue = 2;
+
+    if (equipeQuiJoue !== null) {
+      if (indexQuestion === null) {
+        indexQuestion = indexAleatoire();
+        if (indexQuestion === null) {
+          alert("Toutes les questions ont été posées.");
+          return;
+        }
+        questionsDejaUtilisees.add(indexQuestion);
+      }
+      questionElt.textContent = questions[indexQuestion].question;
+      tourInfoElt.textContent = `Équipe ${equipeQuiJoue} a buzzé ! Choisissez une réponse.`;
+      afficherChoix();
+      demarrerTimer();
+    }
+  });
+
+  btnSuivant.addEventListener('click', questionSuivante);
+
+  reset();
+</script>
+
+</body>
+</html>
 
